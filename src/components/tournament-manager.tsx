@@ -198,7 +198,7 @@ const RoundDisplay = ({
     [players]
   );
 
-  const scoreOptions = ["2-0", "2-1", "1-1", "1-2", "0-2", "0-0"];
+  const scoreOptions = ["2-0", "2-1", "1-0", "1-1", "0-1", "1-2", "0-2", "0-0"];
 
   return (
     <Card>
@@ -368,6 +368,8 @@ export function TournamentManager() {
         } else {
           winnerId = 'draw';
         }
+      } else {
+        winnerId = 'bye';
       }
 
       newRounds[currentRoundIndex].pairings[matchIndex].winnerId = winnerId;
