@@ -23,6 +23,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   PlusCircle,
   Users,
   Swords,
@@ -181,7 +188,7 @@ const RoundDisplay = ({
 }: {
   round: Tournament["rounds"][0];
   players: Player[];
-  onResult: (matchIndex: number, winnerId: number | "draw") => void;
+  onResult: (matchIndex: number, score: string) => void;
 }) => {
   const getPlayerName = useCallback(
     (id: number | "bye") => {
@@ -190,6 +197,8 @@ const RoundDisplay = ({
     },
     [players]
   );
+
+  const scoreOptions = ["2-0", "2-1", "1-1", "1-2", "0-2", "0-0"];
 
   return (
     <Card>
@@ -206,38 +215,38 @@ const RoundDisplay = ({
                 <div className="text-right font-semibold text-lg">
                   {getPlayerName(match.player1Id)}
                 </div>
-                <div className="text-muted-foreground">vs</div>
+                <div className="text-center">
+                  <div className="text-muted-foreground">vs</div>
+                  {match.result && (
+                    <div className="font-mono mt-1 font-bold text-lg">{`${match.result.player1Score} - ${match.result.player2Score}`}</div>
+                  )}
+                </div>
                 <div className="font-semibold text-lg">
                   {getPlayerName(match.player2Id)}
                 </div>
               </div>
               {match.player2Id !== "bye" && (
-                <div className="flex justify-center gap-2 mt-2">
-                  <Button
-                    size="sm"
-                    variant={
-                      match.winnerId === match.player1Id ? "default" : "outline"
+                <div className="flex justify-center mt-2">
+                  <Select
+                    onValueChange={(value) => onResult(index, value)}
+                    value={
+                      match.result
+                        ? `${match.result.player1Score}-${match.result.player2Score}`
+                        : ""
                     }
-                    onClick={() => onResult(index, match.player1Id)}
+                    disabled={!!match.winnerId}
                   >
-                    {getPlayerName(match.player1Id)} wins
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={match.winnerId === "draw" ? "default" : "outline"}
-                    onClick={() => onResult(index, "draw")}
-                  >
-                    Draw
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={
-                      match.winnerId === match.player2Id ? "default" : "outline"
-                    }
-                    onClick={() => onResult(index, match.player2Id as number)}
-                  >
-                    {getPlayerName(match.player2Id)} wins
-                  </Button>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Enter Result" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {scoreOptions.map((score) => (
+                        <SelectItem key={score} value={score}>
+                          {score}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
             </div>
@@ -342,15 +351,25 @@ export function TournamentManager() {
     });
   };
 
-  const handleResult = (matchIndex: number, winnerId: number | "draw") => {
+  const handleResult = (matchIndex: number, score: string) => {
     setTournament((prev) => {
       if (!prev) return null;
       const newRounds = [...prev.rounds];
       const currentRoundIndex = newRounds.length - 1;
       const match = newRounds[currentRoundIndex].pairings[matchIndex];
       
-      const player1Score = winnerId === match.player1Id ? 2 : winnerId === 'draw' ? 1 : 0;
-      const player2Score = winnerId === match.player2Id ? 2 : winnerId === 'draw' ? 1 : 0;
+      const [player1Score, player2Score] = score.split('-').map(Number);
+
+      let winnerId: number | 'draw' | 'bye' | null = null;
+      if (match.player2Id !== 'bye') {
+        if (player1Score > player2Score) {
+          winnerId = match.player1Id;
+        } else if (player2Score > player1Score) {
+          winnerId = match.player2Id as number;
+        } else {
+          winnerId = 'draw';
+        }
+      }
 
       newRounds[currentRoundIndex].pairings[matchIndex].winnerId = winnerId;
       newRounds[currentRoundIndex].pairings[matchIndex].result = { player1Score, player2Score };
