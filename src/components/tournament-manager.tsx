@@ -167,7 +167,7 @@ const StandingsDisplay = ({ players }: { players: Player[] }) => {
                   {p.tiebreakers.matchWinPercentage.toFixed(3)}
                 </TableCell>
                 <TableCell className="text-right">
-                  {p.tiebreakers.opponentsMatchWinPercentage.toFixed(3)}
+                  {p.tiebreakers.opponentsMatchWinPercentage}
                 </TableCell>
                 <TableCell className="text-right">
                   {p.tiebreakers.opponentsOpponentsMatchWinPercentage.toFixed(3)}

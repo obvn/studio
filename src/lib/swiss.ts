@@ -66,17 +66,17 @@ export function calculateStandings(players: Player[], rounds: Round[]): Player[]
     }
   }
 
-  // Calculate Opponents' Match Win Percentage (SOS)
+  // Calculate Sum of Opponent Scores (SOS)
   for (const player of playerMap.values()) {
     let sos_total = 0;
     if (player.opponentIds.length > 0) {
       for (const opponentId of player.opponentIds) {
         const opponent = playerMap.get(opponentId);
         if (opponent) {
-          sos_total += opponent.tiebreakers.matchWinPercentage;
+          sos_total += opponent.points;
         }
       }
-      player.tiebreakers.opponentsMatchWinPercentage = sos_total / player.opponentIds.length;
+      player.tiebreakers.opponentsMatchWinPercentage = sos_total;
     } else {
         player.tiebreakers.opponentsMatchWinPercentage = 0;
     }
