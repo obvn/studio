@@ -234,7 +234,6 @@ const RoundDisplay = ({
                         ? `${match.result.player1Score}-${match.result.player2Score}`
                         : ""
                     }
-                    disabled={!!match.winnerId}
                   >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Enter Result" />
