@@ -141,7 +141,7 @@ const StandingsDisplay = ({ players }: { players: Player[] }) => {
                     <TooltipTrigger className="flex items-center gap-1 cursor-help">
                       SOS <Info size={14} />
                     </TooltipTrigger>
-                    <TooltipContent>Strength of Schedule</TooltipContent>
+                    <TooltipContent>Strength of Schedule (Sum of Opponent Points)</TooltipContent>
                   </Tooltip>
                 </TableHead>
                 <TableHead className="text-right">
@@ -150,7 +150,7 @@ const StandingsDisplay = ({ players }: { players: Player[] }) => {
                       SOSOS <Info size={14} />
                     </TooltipTrigger>
                     <TooltipContent>
-                      Strength of Opponents' Schedule
+                      Sum of Opponents' Strength of Schedule
                     </TooltipContent>
                   </Tooltip>
                 </TableHead>
@@ -167,10 +167,10 @@ const StandingsDisplay = ({ players }: { players: Player[] }) => {
                   {p.tiebreakers.matchWinPercentage.toFixed(3)}
                 </TableCell>
                 <TableCell className="text-right">
-                  {p.tiebreakers.opponentsMatchWinPercentage}
+                  {p.tiebreakers.strengthOfSchedule}
                 </TableCell>
                 <TableCell className="text-right">
-                  {p.tiebreakers.opponentsOpponentsMatchWinPercentage.toFixed(3)}
+                  {p.tiebreakers.sumOfOpponentStrengthOfSchedule}
                 </TableCell>
               </TableRow>
             ))}
@@ -282,8 +282,8 @@ export function TournamentManager() {
       byes: 0,
       tiebreakers: {
         matchWinPercentage: 0,
-        opponentsMatchWinPercentage: 0,
-        opponentsOpponentsMatchWinPercentage: 0,
+        strengthOfSchedule: 0,
+        sumOfOpponentStrengthOfSchedule: 0,
       },
     }));
     setTournament({

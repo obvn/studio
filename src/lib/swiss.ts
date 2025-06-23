@@ -66,7 +66,7 @@ export function calculateStandings(players: Player[], rounds: Round[]): Player[]
     }
   }
 
-  // Calculate Sum of Opponent Scores (SOS)
+  // Calculate Strength of Schedule (SOS)
   for (const player of playerMap.values()) {
     let sos_total = 0;
     if (player.opponentIds.length > 0) {
@@ -76,32 +76,32 @@ export function calculateStandings(players: Player[], rounds: Round[]): Player[]
           sos_total += opponent.points;
         }
       }
-      player.tiebreakers.opponentsMatchWinPercentage = sos_total;
+      player.tiebreakers.strengthOfSchedule = sos_total;
     } else {
-        player.tiebreakers.opponentsMatchWinPercentage = 0;
+        player.tiebreakers.strengthOfSchedule = 0;
     }
   }
 
-  // Calculate Opponents' Opponents' Match Win Percentage (SOSOS)
+  // Calculate Sum of Opponents' Strength of Schedule (SOSOS)
   for (const player of playerMap.values()) {
     let sosos_total = 0;
     if (player.opponentIds.length > 0) {
       for (const opponentId of player.opponentIds) {
         const opponent = playerMap.get(opponentId);
         if (opponent) {
-            sosos_total += opponent.tiebreakers.opponentsMatchWinPercentage;
+            sosos_total += opponent.tiebreakers.strengthOfSchedule;
         }
       }
-      player.tiebreakers.opponentsOpponentsMatchWinPercentage = sosos_total / player.opponentIds.length;
+      player.tiebreakers.sumOfOpponentStrengthOfSchedule = sosos_total;
     } else {
-        player.tiebreakers.opponentsOpponentsMatchWinPercentage = 0;
+        player.tiebreakers.sumOfOpponentStrengthOfSchedule = 0;
     }
   }
 
   const sortedPlayers = Array.from(playerMap.values()).sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
-    if (b.tiebreakers.opponentsMatchWinPercentage !== a.tiebreakers.opponentsMatchWinPercentage) return b.tiebreakers.opponentsMatchWinPercentage - a.tiebreakers.opponentsMatchWinPercentage;
-    if (b.tiebreakers.opponentsOpponentsMatchWinPercentage !== a.tiebreakers.opponentsOpponentsMatchWinPercentage) return b.tiebreakers.opponentsOpponentsMatchWinPercentage - a.tiebreakers.opponentsOpponentsMatchWinPercentage;
+    if (b.tiebreakers.strengthOfSchedule !== a.tiebreakers.strengthOfSchedule) return b.tiebreakers.strengthOfSchedule - a.tiebreakers.strengthOfSchedule;
+    if (b.tiebreakers.sumOfOpponentStrengthOfSchedule !== a.tiebreakers.sumOfOpponentStrengthOfSchedule) return b.tiebreakers.sumOfOpponentStrengthOfSchedule - a.tiebreakers.sumOfOpponentStrengthOfSchedule;
     return 0.5 - Math.random(); // Random tiebreaker
   });
 

@@ -8,8 +8,8 @@ export interface Player {
   byes: number;
   tiebreakers: {
     matchWinPercentage: number;
-    opponentsMatchWinPercentage: number;
-    opponentsOpponentsMatchWinPercentage: number;
+    strengthOfSchedule: number;
+    sumOfOpponentStrengthOfSchedule: number;
   };
 }
 
