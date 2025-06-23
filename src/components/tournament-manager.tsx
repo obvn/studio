@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useCallback } from "react";
-import type { Tournament, Player, Match } from "@/types";
+import type { Tournament, Player, Match, Round } from "@/types";
 import { calculateStandings, generatePairings } from "@/lib/swiss";
 import {
   Card,
@@ -11,6 +11,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -112,7 +119,33 @@ const TournamentSetup = ({
   );
 };
 
-const StandingsDisplay = ({ players }: { players: Player[] }) => {
+const StandingsDisplay = ({
+  players,
+  rounds,
+}: {
+  players: Player[];
+  rounds: Round[];
+}) => {
+  const getPlayerName = useCallback(
+    (id: number) => {
+      return players.find((p) => p.id === id)?.name || "Unknown Player";
+    },
+    [players]
+  );
+
+  const getPlayerMatches = (playerId: number) => {
+    const matches: Match[] = [];
+    rounds.forEach((round) => {
+      const match = round.pairings.find(
+        (p) => p.player1Id === playerId || p.player2Id === playerId
+      );
+      if (match) {
+        matches.push(match);
+      }
+    });
+    return matches;
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -120,66 +153,110 @@ const StandingsDisplay = ({ players }: { players: Player[] }) => {
           <Trophy className="h-6 w-6" /> Standings
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[50px]">Rank</TableHead>
-              <TableHead>Player</TableHead>
-              <TableHead className="text-right">Points</TableHead>
-              <TooltipProvider>
-                <TableHead className="text-right">
-                  <Tooltip>
-                    <TooltipTrigger className="flex items-center gap-1 cursor-help">
-                      MW% <Info size={14} />
-                    </TooltipTrigger>
-                    <TooltipContent>Match Win Percentage</TooltipContent>
-                  </Tooltip>
-                </TableHead>
-                <TableHead className="text-right">
-                  <Tooltip>
-                    <TooltipTrigger className="flex items-center gap-1 cursor-help">
-                      SOS <Info size={14} />
-                    </TooltipTrigger>
-                    <TooltipContent>Strength of Schedule (Sum of Opponent Points)</TooltipContent>
-                  </Tooltip>
-                </TableHead>
-                <TableHead className="text-right">
-                  <Tooltip>
-                    <TooltipTrigger className="flex items-center gap-1 cursor-help">
-                      SOSOS <Info size={14} />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      Sum of Opponents' Strength of Schedule
-                    </TooltipContent>
-                  </Tooltip>
-                </TableHead>
-              </TooltipProvider>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {players.map((p, index) => (
-              <TableRow key={p.id}>
-                <TableCell className="font-medium">{index + 1}</TableCell>
-                <TableCell>{p.name}</TableCell>
-                <TableCell className="text-right">{p.points}</TableCell>
-                <TableCell className="text-right">
-                  {p.tiebreakers.matchWinPercentage.toFixed(3)}
-                </TableCell>
-                <TableCell className="text-right">
-                  {p.tiebreakers.strengthOfSchedule}
-                </TableCell>
-                <TableCell className="text-right">
-                  {p.tiebreakers.sumOfOpponentStrengthOfSchedule}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <CardContent className="px-0">
+        <div className="grid grid-cols-[50px,1fr,auto,auto,auto,auto] items-center gap-4 border-b px-4 py-2 text-sm font-medium text-muted-foreground">
+          <div className="text-left">Rank</div>
+          <div className="text-left">Player</div>
+          <div className="text-right">Points</div>
+          <div className="text-right">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="flex cursor-help items-center justify-end gap-1">
+                  MW% <Info size={14} />
+                </TooltipTrigger>
+                <TooltipContent>Match Win Percentage</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div className="text-right">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="flex cursor-help items-center justify-end gap-1">
+                  SOS <Info size={14} />
+                </TooltipTrigger>
+                <TooltipContent>Strength of Schedule</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div className="text-right">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="flex cursor-help items-center justify-end gap-1">
+                  SOSOS <Info size={14} />
+                </TooltipTrigger>
+                <TooltipContent>Sum of Opponents' Strength of Schedule</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
+        
+        <Accordion type="single" collapsible className="w-full">
+          {players.map((p, index) => (
+            <AccordionItem value={`item-${p.id}`} key={p.id}>
+              <AccordionTrigger className="w-full p-0 hover:no-underline [&_svg]:data-[state=open]:-rotate-180">
+                <div className="grid w-full grid-cols-[50px,1fr,auto,auto,auto,auto] items-center gap-4 px-4 py-3 hover:bg-muted/50">
+                  <div className="text-left font-medium">{index + 1}</div>
+                  <div className="text-left">{p.name}</div>
+                  <div className="text-right">{p.points}</div>
+                  <div className="text-right">{p.tiebreakers.matchWinPercentage.toFixed(3)}</div>
+                  <div className="text-right">{p.tiebreakers.strengthOfSchedule}</div>
+                  <div className="text-right">{p.tiebreakers.sumOfOpponentStrengthOfSchedule}</div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <div className="pl-[66px]"> {/* 50px + 16px gap */}
+                  <h4 className="mb-2 text-sm font-semibold">Match History</h4>
+                  {getPlayerMatches(p.id).length > 0 ? (
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      {getPlayerMatches(p.id).map((match, matchIndex) => {
+                        const opponentId = match.player1Id === p.id ? match.player2Id : match.player1Id;
+                        const opponentName = opponentId === "bye" ? "BYE" : getPlayerName(opponentId as number);
+
+                        let resultText = "Pending";
+                        let outcome: "Win" | "Loss" | "Draw" | null = null;
+                        if (match.winnerId !== null) {
+                          if (match.winnerId === p.id || match.winnerId === 'bye') outcome = 'Win';
+                          else if (match.winnerId === 'draw') outcome = 'Draw';
+                          else outcome = 'Loss';
+                        }
+
+                        if (match.result) {
+                          if (match.player1Id === p.id) {
+                            resultText = `${match.result.player1Score}-${match.result.player2Score}`;
+                          } else {
+                            resultText = `${match.result.player2Score}-${match.result.player1Score}`;
+                          }
+                        }
+                        if (opponentId === "bye") resultText = "2-0";
+
+                        return (
+                          <li key={matchIndex} className="flex items-center justify-between">
+                            <span>vs. <strong>{opponentName}</strong></span>
+                            <div className="flex items-center gap-2">
+                              {outcome && (
+                                <Badge variant={outcome === 'Win' ? 'default' : outcome === 'Loss' ? 'destructive' : 'secondary'} className="text-xs font-medium">
+                                  {outcome}
+                                </Badge>
+                              )}
+                              <span className="font-mono text-foreground">{resultText}</span>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No matches played yet.</p>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </CardContent>
     </Card>
   );
 };
+
 
 const RoundDisplay = ({
   round,
@@ -438,7 +515,7 @@ export function TournamentManager() {
           )}
         </div>
         <div className="space-y-8">
-          <StandingsDisplay players={sortedPlayers} />
+          <StandingsDisplay players={sortedPlayers} rounds={tournament.rounds} />
         </div>
       </div>
     </div>
