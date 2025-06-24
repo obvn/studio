@@ -102,7 +102,7 @@ export function calculateStandings(players: Player[], rounds: Round[]): Player[]
     if (b.points !== a.points) return b.points - a.points;
     if (b.tiebreakers.strengthOfSchedule !== a.tiebreakers.strengthOfSchedule) return b.tiebreakers.strengthOfSchedule - a.tiebreakers.strengthOfSchedule;
     if (b.tiebreakers.sumOfOpponentStrengthOfSchedule !== a.tiebreakers.sumOfOpponentStrengthOfSchedule) return b.tiebreakers.sumOfOpponentStrengthOfSchedule - a.tiebreakers.sumOfOpponentStrengthOfSchedule;
-    return 0.5 - Math.random(); // Random tiebreaker
+    return a.id - b.id; // Use player ID as a final, stable tiebreaker
   });
 
   return sortedPlayers;

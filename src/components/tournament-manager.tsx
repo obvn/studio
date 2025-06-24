@@ -126,26 +126,33 @@ const StandingsDisplay = ({
   players: Player[];
   rounds: Round[];
 }) => {
+  const playerMap = useMemo(() => new Map(players.map((p) => [p.id, p])), [
+    players,
+  ]);
+
   const getPlayerName = useCallback(
     (id: number) => {
-      return players.find((p) => p.id === id)?.name || "Unknown Player";
+      return playerMap.get(id)?.name || "Unknown Player";
     },
-    [players]
+    [playerMap]
   );
 
-  const getPlayerMatches = (playerId: number) => {
-    const matches: Match[] = [];
-    rounds.forEach((round) => {
-      const match = round.pairings.find(
-        (p) => p.player1Id === playerId || p.player2Id === playerId
-      );
-      if (match) {
-        matches.push(match);
-      }
-    });
-    return matches;
-  };
-  
+  const getPlayerMatches = useCallback(
+    (playerId: number) => {
+      const matches: Match[] = [];
+      rounds.forEach((round) => {
+        const match = round.pairings.find(
+          (p) => p.player1Id === playerId || p.player2Id === playerId
+        );
+        if (match) {
+          matches.push(match);
+        }
+      });
+      return matches;
+    },
+    [rounds]
+  );
+
   return (
     <Card>
       <CardHeader>
@@ -184,79 +191,122 @@ const StandingsDisplay = ({
                 <TooltipTrigger className="flex cursor-help items-center justify-end gap-1">
                   SOSOS <Info size={14} />
                 </TooltipTrigger>
-                <TooltipContent>Sum of Opponents' Strength of Schedule</TooltipContent>
+                <TooltipContent>
+                  Sum of Opponents' Strength of Schedule
+                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
         </div>
-        
+
         <Accordion type="single" collapsible className="w-full">
-          {players.map((p, index) => (
-            <AccordionItem value={`item-${p.id}`} key={p.id}>
-              <AccordionTrigger className="w-full p-0 hover:no-underline [&_svg]:data-[state=open]:-rotate-180">
-                <div className="grid w-full grid-cols-[50px,1fr,auto,auto,auto,auto] items-center gap-4 px-4 py-3 hover:bg-muted/50">
-                  <div className="text-left font-medium">{index + 1}</div>
-                  <div className="text-left">{p.name}</div>
-                  <div className="text-right">{p.points}</div>
-                  <div className="text-right">{p.tiebreakers.matchWinPercentage.toFixed(3)}</div>
-                  <div className="text-right">{p.tiebreakers.strengthOfSchedule}</div>
-                  <div className="text-right">{p.tiebreakers.sumOfOpponentStrengthOfSchedule}</div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-4 pb-4">
-                <div className="pl-[66px]"> {/* 50px + 16px gap */}
-                  <h4 className="mb-2 text-sm font-semibold">Match History</h4>
-                  {getPlayerMatches(p.id).length > 0 ? (
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      {getPlayerMatches(p.id).map((match, matchIndex) => {
-                        const opponentId = match.player1Id === p.id ? match.player2Id : match.player1Id;
-                        const opponentName = opponentId === "bye" ? "BYE" : getPlayerName(opponentId as number);
+          {players.map((p, index) => {
+            const playerMatches = getPlayerMatches(p.id);
+            return (
+              <AccordionItem value={`item-${p.id}`} key={p.id}>
+                <AccordionTrigger className="w-full p-0 hover:no-underline">
+                  <div className="grid w-full grid-cols-[50px,1fr,auto,auto,auto,auto] items-center gap-4 px-4 py-3 hover:bg-muted/50">
+                    <div className="text-left font-medium">{index + 1}</div>
+                    <div className="text-left">{p.name}</div>
+                    <div className="text-right">{p.points}</div>
+                    <div className="text-right">
+                      {p.tiebreakers.matchWinPercentage.toFixed(3)}
+                    </div>
+                    <div className="text-right">
+                      {p.tiebreakers.strengthOfSchedule}
+                    </div>
+                    <div className="text-right">
+                      {p.tiebreakers.sumOfOpponentStrengthOfSchedule}
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <div className="pl-[66px]">
+                    {" "}
+                    {/* 50px + 16px gap */}
+                    <h4 className="mb-2 text-sm font-semibold">
+                      Match History
+                    </h4>
+                    {playerMatches.length > 0 ? (
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        {playerMatches.map((match, matchIndex) => {
+                          const opponentId =
+                            match.player1Id === p.id
+                              ? match.player2Id
+                              : match.player1Id;
+                          const opponentName =
+                            opponentId === "bye"
+                              ? "BYE"
+                              : getPlayerName(opponentId);
 
-                        let resultText = "Pending";
-                        let outcome: "Win" | "Loss" | "Draw" | null = null;
-                        if (match.winnerId !== null) {
-                          if (match.winnerId === p.id || match.winnerId === 'bye') outcome = 'Win';
-                          else if (match.winnerId === 'draw') outcome = 'Draw';
-                          else outcome = 'Loss';
-                        }
-
-                        if (match.result) {
-                          if (match.player1Id === p.id) {
-                            resultText = `${match.result.player1Score}-${match.result.player2Score}`;
-                          } else {
-                            resultText = `${match.result.player2Score}-${match.result.player1Score}`;
+                          let resultText = "Pending";
+                          let outcome: "Win" | "Loss" | "Draw" | null = null;
+                          if (match.winnerId !== null) {
+                            if (
+                              match.winnerId === p.id ||
+                              match.winnerId === "bye"
+                            )
+                              outcome = "Win";
+                            else if (match.winnerId === "draw")
+                              outcome = "Draw";
+                            else outcome = "Loss";
                           }
-                        }
-                        if (opponentId === "bye") resultText = "2-0";
 
-                        return (
-                          <li key={matchIndex} className="flex items-center justify-between">
-                            <span>vs. <strong>{opponentName}</strong></span>
-                            <div className="flex items-center gap-2">
-                              {outcome && (
-                                <Badge variant={outcome === 'Win' ? 'default' : outcome === 'Loss' ? 'destructive' : 'secondary'} className="text-xs font-medium">
-                                  {outcome}
-                                </Badge>
-                              )}
-                              <span className="font-mono text-foreground">{resultText}</span>
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No matches played yet.</p>
-                  )}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
+                          if (match.result) {
+                            if (match.player1Id === p.id) {
+                              resultText = `${match.result.player1Score}-${match.result.player2Score}`;
+                            } else {
+                              resultText = `${match.result.player2Score}-${match.result.player1Score}`;
+                            }
+                          }
+                          if (opponentId === "bye") resultText = "2-0";
+
+                          return (
+                            <li
+                              key={matchIndex}
+                              className="flex items-center justify-between"
+                            >
+                              <span>
+                                vs. <strong>{opponentName}</strong>
+                              </span>
+                              <div className="flex items-center gap-2">
+                                {outcome && (
+                                  <Badge
+                                    variant={
+                                      outcome === "Win"
+                                        ? "default"
+                                        : outcome === "Loss"
+                                        ? "destructive"
+                                        : "secondary"
+                                    }
+                                    className="text-xs font-medium"
+                                  >
+                                    {outcome}
+                                  </Badge>
+                                )}
+                                <span className="font-mono text-foreground">
+                                  {resultText}
+                                </span>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No matches played yet.
+                      </p>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
         </Accordion>
       </CardContent>
     </Card>
   );
 };
-
 
 const RoundDisplay = ({
   round,
